@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-96 fade-in">
+            <div class="text-center mb-8">
+                <i class="fas fa-chart-line text-5xl text-blue-600 mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-800">ASPHARE Simulator</h2>
+                <p class="text-gray-600 mt-2">Developer Control Panel</p>
+            </div>
+
+            <!-- Step 1: Email/Password -->
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="email" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="admin@asphare.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="password" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="••••••••">
+                </div>
+                <button type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login
+                </button>
+            </form>
+
+            <!-- Step 2: 2FA Code (hidden initially) -->
+            <form id="twoFAForm" class="space-y-4 hidden">
+                <div class="text-center mb-4">
+                    <i class="fas fa-envelope text-4xl text-blue-600 mb-2"></i>
+                    <p class="text-sm text-gray-600">Enter the 6-digit code sent to your email</p>
+                </div>
+                <div>
+                    <input type="text" id="code" maxlength="6" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg text-center text-2xl font-mono tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="000000">
+                </div>
+                <button type="submit"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-lg transition">
+                    <i class="fas fa-check mr-2"></i>Verify Code
+                </button>
+                <button type="button" onclick="resetLogin()"
+                        class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 rounded-lg transition">
+                    Back to Login
+                </button>
+            </form>
+
+            <div id="devCode" class="mt-4 p-3 bg-yellow-100 border border-yellow-400 rounded hidden">
+                <p class="text-xs text-yellow-800"><strong>Dev Mode:</strong> Your code is <span id="devCodeValue" class="font-mono font-bold"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userEmail = '';
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            userEmail = email;
+
+            try {
+                const result = await apiCall('/login', 'POST', { email, password });
+
+                if (result.success) {
+                    // Show 2FA form
+                    document.getElementById('loginForm').classList.add('hidden');
+                    document.getElementById('twoFAForm').classList.remove('hidden');
+
+                    // Show dev code if in dev mode
+                    if (result.dev_code) {
+                        document.getElementById('devCodeValue').textContent = result.dev_code;
+                        document.getElementById('devCode').classList.remove('hidden');
+                    }
+
+                    showNotification('2FA code sent! Check your email.', 'success');
+                } else {
+                    showNotification(result.message || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showNotification('Login error: ' + error.message, 'error');
+            }
+        });
+
+        document.getElementById('twoFAForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const code = document.getElementById('code').value;
+
+            try {
+                const result = await apiCall('/verify-2fa', 'POST', { email: userEmail, code });
+
+                if (result.success) {
+                    showNotification('Login successful!', 'success');
+                    setTimeout(() => window.location.href = '/ui/dashboard', 1000);
+                } else {
+                    showNotification(result.message || 'Invalid code', 'error');
+                }
+            } catch (error) {
+                showNotification('Verification error: ' + error.message, 'error');
+            }
+        });
+
+        function resetLogin() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('twoFAForm').classList.add('hidden');
+            document.getElementById('devCode').classList.add('hidden');
+            document.getElementById('code').value = '';
+        }
+    </script>
+{% endblock %}

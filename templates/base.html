@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ASPHARE Event Simulator{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+{% if session.user_authenticated %}
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-chart-line text-2xl"></i>
+                    <span class="text-xl font-bold">ASPHARE Event Simulator</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <a href="{{ url_for('dashboard') }}" class="hover:text-blue-200 transition">
+                        <i class="fas fa-dashboard mr-2"></i>Dashboard
+                    </a>
+                    <a href="{{ url_for('config_page') }}" class="hover:text-blue-200 transition">
+                        <i class="fas fa-cog mr-2"></i>Config
+                    </a>
+                    <a href="{{ url_for('manual_events') }}" class="hover:text-blue-200 transition">
+                        <i class="fas fa-bolt mr-2"></i>Manual
+                    </a>
+                    <a href="{{ url_for('api_docs') }}" class="hover:text-blue-200 transition">
+                        <i class="fas fa-book mr-2"></i>API
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+{% endif %}
+
+<!-- Main Content -->
+<main class="{% if session.user_authenticated %}max-w-7xl mx-auto px-4 py-8{% endif %}">
+    {% block content %}{% endblock %}
+</main>
+
+<script>
+    // Global utility functions
+    async function apiCall(endpoint, method = 'GET', data = null) {
+        const options = {
+            method,
+            headers: { 'Content-Type': 'application/json' }
+        };
+        if (data) options.body = JSON.stringify(data);
+
+        const response = await fetch(endpoint, options);
+        return response.json();
+    }
+
+    function showNotification(message, type = 'info') {
+        const colors = {
+            success: 'bg-green-500',
+            error: 'bg-red-500',
+            info: 'bg-blue-500'
+        };
+
+        const notif = document.createElement('div');
+        notif.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 fade-in`;
+        notif.textContent = message;
+        document.body.appendChild(notif);
+
+        setTimeout(() => notif.remove(), 3000);
+    }
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

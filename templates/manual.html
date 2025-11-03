@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-2xl font-bold mb-6">Manual Event Generation</h2>
+
+        <form id="manualForm" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Platform -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Platform</label>
+                    <select id="platform" onchange="updateEventTypes()"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="slack">Slack</option>
+                        <option value="teams">Microsoft Teams</option>
+                        <option value="jira">Jira</option>
+                    </select>
+                </div>
+
+                <!-- Event Type -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Event Type</label>
+                    <select id="eventType"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <!-- User -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">User (optional)</label>
+                    <select id="userId"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="">Random User</option>
+                        <!-- Populated from API -->
+
+                    </select>
+                </div>
+
+                <!-- Count -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Number of Events</label>
+                    <input type="number" id="count" min="1" max="100" value="1"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <button type="submit"
+                    class="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-lg transition">
+                <i class="fas fa-bolt mr-2"></i>Generate Events
+            </button>
+        </form>
+
+        <!-- Recent Events -->
+        <div class="mt-8">
+            <h3 class="text-lg font-semibold mb-4">Recently Generated Events</h3>
+            <div id="recentEvents" class="space-y-2">
+                <p class="text-gray-500 text-sm">No events generated yet</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const eventTypes = {
+            slack: [
+                'message.channel',
+                'message.direct',
+                'message.thread',
+                'reaction.add',
+                'mention',
+                'file.upload',
+                'channel.join',
+                'status.update'
+            ],
+            teams: [
+                'message.channel',
+                'message.chat',
+                'meeting.scheduled',
+                'meeting.joined',
+                'meeting.ended',
+                'file.shared',
+                'reaction.add',
+                'mention'
+            ],
+            jira: [
+                'issue.created',
+                'issue.updated',
+                'issue.status_changed',
+                'issue.assigned',
+                'issue.commented',
+                'issue.priority_changed',
+                'attachment.added'
+            ]
+        };
+
+        function updateEventTypes() {
+            const platform = document.getElementById('platform').value;
+            const select = document.getElementById('eventType');
+            select.innerHTML = '';
+
+            eventTypes[platform].forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+            });
+        }
+
+        async function loadUsers() {
+            try {
+                const users = await apiCall('/api/users');
+                const select = document.getElementById('userId');
+
+                // Clear existing options except the first one
+                while (select.options.length > 1) {
+                    select.remove(1);
+                }
+
+                // Add users to the dropdown
+                users.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = `${user.name} (${user.behavior_pattern})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load users');
+            }
+        }
+
+        document.getElementById('manualForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                platform: document.getElementById('platform').value,
+                event_type: document.getElementById('eventType').value,
+                user_id: document.getElementById('userId').value || null,
+                count: parseInt(document.getElementById('count').value)
+            };
+
+            try {
+                const result = await apiCall('/api/simulate', 'POST', data);
+                if (result.success) {
+                    showNotification(`Generated ${result.count} events!`, 'success');
+
+                    // Add to recent events
+                    const recent = document.getElementById('recentEvents');
+                    const item = document.createElement('div');
+                    item.className = 'bg-gray-50 p-3 rounded border border-gray-200 fade-in';
+                    item.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="font-medium">${data.platform}</span> -
+                            <span class="text-gray-600">${data.event_type}</span>
+                        </div>
+                        <span class="text-sm text-gray-500">${result.count} events</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">${new Date().toLocaleString()}</p>
+                `;
+                    recent.insertBefore(item, recent.firstChild);
+
+                    // Keep only last 10
+                    while (recent.children.length > 10) {
+                        recent.removeChild(recent.lastChild);
+                    }
+                }
+            } catch (error) {
+                showNotification('Failed to generate events', 'error');
+            }
+        });
+
+        // Initialize
+        updateEventTypes();
+        loadUsers();
+    </script>
+{% endblock %}
+

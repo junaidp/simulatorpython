@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="space-y-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-2xl font-bold mb-4">API Endpoints Documentation</h2>
+            <p class="text-gray-600 mb-6">
+                These endpoints are polled by n8n workflows. Events are automatically marked as consumed after fetching.
+            </p>
+
+            <div class="space-y-4">
+                {% set endpoints = [
+                {'method': 'GET', 'path': '/api/slack/events', 'desc': 'Fetch unconsumed Slack events', 'params': 'limit (default 50, max 1000), order=timestamp'},
+                {'method': 'GET', 'path': '/api/teams/events', 'desc': 'Fetch unconsumed Teams events', 'params': 'limit (default 50, max 1000), order=timestamp'},
+                {'method': 'GET', 'path': '/api/jira/events', 'desc': 'Fetch unconsumed Jira events', 'params': 'limit (default 50, max 1000), order=timestamp'},
+                {'method': 'GET', 'path': '/api/replay/status', 'desc': 'Get replay progress information', 'params': 'None'},
+                {'method': 'POST', 'path': '/api/replay/progress', 'desc': 'Update replay progress (called by n8n)', 'params': 'events_processed: int'},
+                {'method': 'POST', 'path': '/api/replay/start', 'desc': 'Manually start historical replay', 'params': 'None'},
+                {'method': 'GET', 'path': '/api/config', 'desc': 'Get current simulator configuration', 'params': 'None'},
+                {'method': 'POST', 'path': '/api/config', 'desc': 'Update simulator configuration', 'params': 'user_count, platforms, working_hours, etc.'},
+                {'method': 'POST', 'path': '/api/simulate', 'desc': 'Manually generate specific events', 'params': 'platform, event_type, user_id, count'},
+                {'method': 'POST', 'path': '/api/schedule', 'desc': 'Schedule events for future generation', 'params': 'schedule_time, platform, event_type, params'},
+                {'method': 'GET', 'path': '/api/stats', 'desc': 'Get system statistics and metrics', 'params': 'None'},
+                {'method': 'GET', 'path': '/api/users', 'desc': 'Get all user profiles', 'params': 'None'},
+                {'method': 'POST', 'path': '/api/cleanup', 'desc': 'Clean up old events', 'params': 'None'},
+                {'method': 'GET', 'path': '/health', 'desc': 'Health check endpoint', 'params': 'None'}
+            ] %}
+
+                {% for api in endpoints %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
+                        <div class="flex items-center gap-3 mb-2">
+                    <span class="px-2 py-1 rounded text-xs font-mono font-bold {% if api.method == 'GET' %}bg-blue-100 text-blue-800{% else %}bg-green-100 text-green-800{% endif %}">
+                        {{ api.method }}
+                    </span>
+                            <code class="text-sm font-mono text-gray-800">{{ api.path }}</code>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-1">{{ api.desc }}</p>
+                        <p class="text-xs text-gray-500">Parameters: {{ api.params }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">Example Event Response</h3>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-xs">[
+  {
+    "event_id": "evt_abc123",
+    "user_id": "user_001",
+    "platform": "slack",
+    "event_type": "message.channel",
+    "event_category": "communication",
+    "timestamp": "2025-10-30T14:32:15Z",
+    "payload": {
+      "channel_id": "C12345",
+      "channel_name": "#engineering",
+      "message_text": "Sprint planning starts in 10min",
+      "user_name": "Sarah Chen",
+      "has_mentions": false
+    },
+    "consumed": false,
+    "source": "daily"
+  }
+]</pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">Test API</h3>
+            <div class="flex gap-4">
+                <button onclick="testAPI('/api/stats')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                    <i class="fas fa-vial mr-2"></i>Test /api/stats
+                </button>
+                <button onclick="testAPI('/api/config')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
+                    <i class="fas fa-vial mr-2"></i>Test /api/config
+                </button>
+                <button onclick="testAPI('/health')" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition">
+                    <i class="fas fa-vial mr-2"></i>Test /health
+                </button>
+            </div>
+            <pre id="testResult" class="mt-4 bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-xs hidden"></pre>
+        </div>
+    </div>
+
+    <script>
+        async function testAPI(endpoint) {
+            try {
+                const result = await apiCall(endpoint);
+                const pre = document.getElementById('testResult');
+                pre.textContent = JSON.stringify(result, null, 2);
+                pre.classList.remove('hidden');
+                showNotification(`API test successful: ${endpoint}`, 'success');
+            } catch (error) {
+                showNotification(`API test failed: ${error.message}`, 'error');
+            }
+        }
+    </script>
+{% endblock %}

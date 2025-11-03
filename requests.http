@@ -1,0 +1,7 @@
+# Get Teams events
+GET http://localhost:5000/api/teams/events
+Accept: application/json
+
+# Get Teams events with limit (example with limit of 10)
+# GET http://localhost:5000/api/teams/events?limit=10
+# Accept: application/json
