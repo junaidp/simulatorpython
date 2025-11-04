@@ -6,6 +6,7 @@
     <title>{% block title %}ASPHARE Event Simulator{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn {
@@ -14,7 +15,9 @@
         }
     </style>
 </head>
+
 <body class="bg-gray-50">
+
 {% if session.user_authenticated %}
     <!-- Navigation -->
     <nav class="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
@@ -31,6 +34,9 @@
                     <a href="{{ url_for('config_page') }}" class="hover:text-blue-200 transition">
                         <i class="fas fa-cog mr-2"></i>Config
                     </a>
+                    <a href="{{ url_for('all_events') }}" class="hover:text-blue-200 transition">
+                        <i class="fas fa-calendar-alt mr-2"></i>Events
+                    </a>
                     <a href="{{ url_for('manual_events') }}" class="hover:text-blue-200 transition">
                         <i class="fas fa-bolt mr-2"></i>Manual
                     </a>
@@ -40,6 +46,7 @@
                     <a href="{{ url_for('logout') }}" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded transition">
                         <i class="fas fa-sign-out-alt mr-2"></i>Logout
                     </a>
+
                 </div>
             </div>
         </div>
@@ -51,8 +58,8 @@
     {% block content %}{% endblock %}
 </main>
 
+<!-- Global JS (always available) -->
 <script>
-    // Global utility functions
     async function apiCall(endpoint, method = 'GET', data = null) {
         const options = {
             method,
@@ -80,6 +87,8 @@
     }
 </script>
 
+<!-- ✅ Child pages add their own scripts safely -->
 {% block scripts %}{% endblock %}
+
 </body>
 </html>

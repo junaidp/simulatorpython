@@ -121,16 +121,17 @@ def get_slack_events():
     """Fetch unconsumed Slack events"""
     limit = request.args.get('limit', app.config['EVENT_BATCH_SIZE'], type=int)
     limit = min(limit, app.config['MAX_EVENT_BATCH_SIZE'])
+    consume = request.args.get('consumed', default='true').lower() == 'true'
 
     events = Event.query.filter_by(
         platform='slack',
         consumed=False
     ).order_by(Event.timestamp.asc()).limit(limit).all()
 
-    # Mark as consumed
-    for event in events:
-        event.consumed = True
-    db.session.commit()
+    if consume:
+        for event in events:
+            event.consumed = True
+        db.session.commit()
 
     return jsonify([event.to_dict() for event in events])
 
@@ -140,16 +141,19 @@ def get_teams_events():
     """Fetch unconsumed Teams events"""
     limit = request.args.get('limit', app.config['EVENT_BATCH_SIZE'], type=int)
     limit = min(limit, app.config['MAX_EVENT_BATCH_SIZE'])
+    # Optional consumed flag — default = True
+    consume = request.args.get('consumed', default='true').lower() == 'true'
+
 
     events = Event.query.filter_by(
         platform='teams',
         consumed=False
     ).order_by(Event.timestamp.asc()).limit(limit).all()
 
-    # Mark as consumed
-    for event in events:
-        event.consumed = True
-    db.session.commit()
+    if consume:
+        for event in events:
+            event.consumed = True
+        db.session.commit()
 
     return jsonify([event.to_dict() for event in events])
 
@@ -159,16 +163,16 @@ def get_jira_events():
     """Fetch unconsumed Jira events"""
     limit = request.args.get('limit', app.config['EVENT_BATCH_SIZE'], type=int)
     limit = min(limit, app.config['MAX_EVENT_BATCH_SIZE'])
-
+    consume = request.args.get('consumed', default='true').lower() == 'true'
     events = Event.query.filter_by(
         platform='jira',
         consumed=False
     ).order_by(Event.timestamp.asc()).limit(limit).all()
 
-    # Mark as consumed
-    for event in events:
-        event.consumed = True
-    db.session.commit()
+    if consume:
+        for event in events:
+            event.consumed = True
+        db.session.commit()
 
     return jsonify([event.to_dict() for event in events])
 
@@ -376,6 +380,17 @@ def start_replay():
         'success': True,
         'message': f'Replay started with {historical_events} events'
     })
+
+
+# ============================================================================
+# To show all events in UI , Same which will be fetched in n8n, Just to confirm from UI
+# ============================================================================
+
+@app.route('/ui/all-events')
+@login_required
+def all_events():
+    return render_template('all_events.html')
+
 
 
 # ============================================================================

@@ -33,7 +33,6 @@
                             class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
                         <option value="">Random User</option>
                         <!-- Populated from API -->
-
                     </select>
                 </div>
 
@@ -55,41 +54,29 @@
         <div class="mt-8">
             <h3 class="text-lg font-semibold mb-4">Recently Generated Events</h3>
             <div id="recentEvents" class="space-y-2">
-                <p class="text-gray-500 text-sm">No events generated yet</p>
+
             </div>
         </div>
     </div>
 
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }} <!-- ✅ include base.html scripts so apiCall() exists -->
+
     <script>
         const eventTypes = {
             slack: [
-                'message.channel',
-                'message.direct',
-                'message.thread',
-                'reaction.add',
-                'mention',
-                'file.upload',
-                'channel.join',
-                'status.update'
+                'message.channel', 'message.direct', 'message.thread', 'reaction.add',
+                'mention', 'file.upload', 'channel.join', 'status.update'
             ],
             teams: [
-                'message.channel',
-                'message.chat',
-                'meeting.scheduled',
-                'meeting.joined',
-                'meeting.ended',
-                'file.shared',
-                'reaction.add',
-                'mention'
+                'message.channel', 'message.chat', 'meeting.scheduled', 'meeting.joined',
+                'meeting.ended', 'file.shared', 'reaction.add', 'mention'
             ],
             jira: [
-                'issue.created',
-                'issue.updated',
-                'issue.status_changed',
-                'issue.assigned',
-                'issue.commented',
-                'issue.priority_changed',
-                'attachment.added'
+                'issue.created', 'issue.updated', 'issue.status_changed', 'issue.assigned',
+                'issue.commented', 'issue.priority_changed', 'attachment.added'
             ]
         };
 
@@ -102,6 +89,7 @@
                 const option = document.createElement('option');
                 option.value = type;
                 option.textContent = type;
+                select.appendChild(option);
             });
         }
 
@@ -110,12 +98,10 @@
                 const users = await apiCall('/api/users');
                 const select = document.getElementById('userId');
 
-                // Clear existing options except the first one
                 while (select.options.length > 1) {
                     select.remove(1);
                 }
 
-                // Add users to the dropdown
                 users.forEach(user => {
                     const option = document.createElement('option');
                     option.value = user.id;
@@ -123,7 +109,7 @@
                     select.appendChild(option);
                 });
             } catch (error) {
-                console.error('Failed to load users');
+                console.error('Failed to load users', error);
             }
         }
 
@@ -139,10 +125,10 @@
 
             try {
                 const result = await apiCall('/api/simulate', 'POST', data);
+
                 if (result.success) {
                     showNotification(`Generated ${result.count} events!`, 'success');
 
-                    // Add to recent events
                     const recent = document.getElementById('recentEvents');
                     const item = document.createElement('div');
                     item.className = 'bg-gray-50 p-3 rounded border border-gray-200 fade-in';
@@ -158,7 +144,6 @@
                 `;
                     recent.insertBefore(item, recent.firstChild);
 
-                    // Keep only last 10
                     while (recent.children.length > 10) {
                         recent.removeChild(recent.lastChild);
                     }
@@ -168,9 +153,8 @@
             }
         });
 
-        // Initialize
+        // ✅ Initialize page
         updateEventTypes();
         loadUsers();
     </script>
 {% endblock %}
-

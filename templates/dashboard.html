@@ -87,7 +87,7 @@
             <div class="space-y-4">
                 <div>
                     <div class="flex justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-700">Slack (60% target)</span>
+                        <span class="text-sm font-medium text-gray-700">Slack (~ 60% )</span>
                         <div class="text-sm text-gray-600">
                             <span class="font-semibold" id="slackTotal">-</span> total
                             <span class="text-gray-400 mx-2">|</span>
@@ -101,7 +101,7 @@
 
                 <div>
                     <div class="flex justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-700">Microsoft Teams (25% target)</span>
+                        <span class="text-sm font-medium text-gray-700">Microsoft Teams (~ 25% )</span>
                         <div class="text-sm text-gray-600">
                             <span class="font-semibold" id="teamsTotal">-</span> total
                             <span class="text-gray-400 mx-2">|</span>
@@ -115,7 +115,7 @@
 
                 <div>
                     <div class="flex justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-700">Jira (15% target)</span>
+                        <span class="text-sm font-medium text-gray-700">Jira (~ 15% )</span>
                         <div class="text-sm text-gray-600">
                             <span class="font-semibold" id="jiraTotal">-</span> total
                             <span class="text-gray-400 mx-2">|</span>
@@ -191,7 +191,7 @@
                 document.getElementById('consumed').textContent = stats.consumed_events.toLocaleString();
 
                 const percent = Math.round((stats.consumed_events / stats.total_events) * 100);
-                document.getElementById('consumedPercent').textContent = `${percent}% processed`;
+               // document.getElementById('consumedPercent').textContent = `${percent}% processed`;
 
                 // Update platforms
                 document.getElementById('slackTotal').textContent = stats.platforms.slack.total.toLocaleString();

@@ -76,7 +76,7 @@ def seed_historical_events(days=180):
             Event.query.filter_by(source='historical').delete()
             db.session.commit()
 
-        print(f"\n🚀 Generating {days} days of historical events...")
+        print(f"\n Generating {days} days of historical events...")
         print(f"   Users: {len(users)}")
         print(f"   Estimated events: ~{len(users) * days * 30}")
         print(f"   This may take 15-30 minutes...\n")

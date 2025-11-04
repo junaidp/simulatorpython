@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}All Events{% endblock %}
+
+{% block content %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-2xl font-bold mb-6">All Events</h2>
+
+        <!-- Event source dropdown -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Event Source</label>
+            <select id="eventSource"
+                    class="w-64 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                    onchange="loadAllEvents()">
+                <option value="teams">Microsoft Teams</option>
+                <option value="slack">Slack</option>
+                <option value="jira">Jira</option>
+            </select>
+        </div>
+
+        <!-- Events Table -->
+        <div id="eventsTable" class="bg-white border border-gray-200 rounded-lg p-4"></div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        async function loadAllEvents() {
+            const src = document.getElementById("eventSource").value;
+
+            let apiUrl = src === "teams" ? "/api/teams/events?consumed=false" :
+                src === "slack" ? "/api/slack/events?consumed=false" :
+                    "/api/jira/events?consumed=false";
+
+            const events = await apiCall(apiUrl);
+
+            let table = `
+        <table class="min-w-full divide-y divide-gray-300 text-sm">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">Event ID</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">Platform</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">Type</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">User</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">Message</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">Timestamp</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+        `;
+
+            events.forEach(ev => {
+                let message = "-";
+                if (ev.payload) {
+                    if (ev.payload.message_text) message = ev.payload.message_text;
+                    else if (ev.payload.meeting_title) message = ev.payload.meeting_title;
+                }
+
+                table += `
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-2">${ev.event_id}</td>
+                <td class="px-4 py-2 uppercase">${ev.platform}</td>
+                <td class="px-4 py-2">${ev.event_type}</td>
+                <td class="px-4 py-2">${ev.payload?.user_name || '-'}</td>
+                <td class="px-4 py-2">${message}</td>
+                <td class="px-4 py-2 text-xs text-gray-500">${ev.timestamp}</td>
+            </tr>`;
+            });
+
+            table += "</tbody></table>";
+            document.getElementById("eventsTable").innerHTML = table;
+        }
+
+        document.addEventListener("DOMContentLoaded", loadAllEvents);
+    </script>
+{% endblock %}
