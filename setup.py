@@ -32,9 +32,9 @@ def seed_users(count=45):
         existing = User.query.count()
         if existing > 0:
             print(f"Database already has {existing} users")
-            response = input("Delete and recreate? (y/n): ")
-            if response.lower() != 'y':
-                return
+            #response = input("Delete and recreate? (y/n): ")
+            #if response.lower() != 'y':
+            #  return
             User.query.delete()
             db.session.commit()
 
@@ -70,9 +70,9 @@ def seed_historical_events(days=180):
         existing = Event.query.filter_by(source='historical').count()
         if existing > 0:
             print(f"Database already has {existing} historical events")
-            response = input("Delete and regenerate? (y/n): ")
-            if response.lower() != 'y':
-                return
+            # response = input("Delete and regenerate? (y/n): ")
+            # if response.lower() != 'y':
+            #    return
             Event.query.filter_by(source='historical').delete()
             db.session.commit()
 

